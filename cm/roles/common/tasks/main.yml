@@ -1,0 +1,13 @@
+---
+
+- name: fix an aptitude error, found in ubuntu 16.04 lts
+  apt:
+    name: aptitude
+  become: true
+
+- name: upgrade
+  apt:
+    upgrade: safe
+    update_cache: yes
+    cache_valid_time: 86400
+  become: true

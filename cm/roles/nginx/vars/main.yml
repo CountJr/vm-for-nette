@@ -1,0 +1,15 @@
+---
+
+root_group: root
+
+
+nginx_packages:
+  - nginx
+# nginx_  conf:
+#     path: /etc/nginx/conf.d
+# nginx_    file_path: /etc/nginx/nginx.conf
+nginx_mime_file_path: /etc/nginx/mime.types
+nginx_pidfile: /run/nginx.pid
+nginx_vhost_path: /etc/nginx/sites-enabled
+nginx_default_vhost_path: /etc/nginx/sites-enabled/default
+__nginx_user: "www-data"

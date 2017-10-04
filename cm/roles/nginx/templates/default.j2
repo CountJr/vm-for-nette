@@ -1,0 +1,45 @@
+# Default server configuration
+#
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	root /vagrant/web-project/www;
+
+	index index.php;
+
+	server_name 192.168.33.11;
+
+	access_log /var/log/nginx/access.192.168.33.11.log;
+	error_log /var/log/nginx/error.192.168.33.11.log;
+
+	location / {
+		try_files $uri $uri/ /index.php?$args;
+	}
+	sendfile on;
+	send_timeout 1024s;
+
+	location ~ [^/]\.php(/|$) {
+		fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+
+		include fastcgi_params;
+		fastcgi_pass unix:/var/run/php/php7.1-fpm.sock;
+		fastcgi_index index.php;
+
+		fastcgi_param PATH_INFO $fastcgi_path_info;
+		fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
+		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+		try_files $uri =404;
+	}
+
+	location ~ /\.ht {
+		deny all;
+	}
+	location ~ \.(neon|ini|log|yml)$ { # deny access to configuration files
+		deny all;
+	}
+
+	location = /robots.txt  { access_log off; log_not_found off; }
+	location = /favicon.ico { access_log off; log_not_found off; }
+}

@@ -1,0 +1,122 @@
+---
+
+- name: define nginx user
+  set_fact:
+    nginx_user: "{{ __nginx_user }}"
+  # register: nginx_debug
+  when: nginx_user is not defined
+
+# - name: add key
+#   block:
+#     - apt_key:
+#         url: "{{ nginx_key_url }}"
+#     - apt_repository:
+#         repo: "{{ nginx_repository }}"
+#       register: nginx_ppa_added
+#   when: nginx_ppa_use
+
+- name: Add PPA for Nginx.
+  apt_repository:
+    repo: 'ppa:nginx/{{ nginx_ppa_version }}'
+    state: present
+    update_cache: yes
+  register: nginx_ppa_added
+  when: nginx_ppa_use
+  become: true
+
+# - name: Ensure nginx will reinstall if the PPA was just added
+#   apt:
+#     name: nginx
+#     state: absent
+#   when: nginx_ppa_added.changed
+
+# - name: Update apt cache.
+#   apt: update_cache=yes cache_valid_time=86400
+#   changed_when: false
+
+- name: Ensure nginx is installed.
+  apt:
+    name: "{{ nginx_package_name }}"
+    state: installed
+    default_release: "{{ nginx_default_release }}"
+  become: true
+  # notify: restart nginx
+
+# - name: Remove default nginx vhost config file (if configured).
+#   file:
+#     path: "{{ nginx_default_vhost_path }}"
+#     state: absent
+#   when: nginx_remove_default_vhost
+#   notify: restart nginx
+
+# - name: Ensure nginx_vhost_path exists.
+#   file:
+#     path: "{{ nginx_vhost_path }}"
+#     state: directory
+#   notify: reload nginx
+
+# - name: Add managed vhost config files.
+#   template:
+#     src: "{{ item.template|default(nginx_vhost_template) }}"
+#     dest: "{{ nginx_vhost_path }}/{{ item.filename|default(item.server_name.split(' ')[0] ~ '.conf') }}"
+#     force: yes
+#     mode: 0644
+#   when: item.state|default('present') != 'absent'
+#   with_items: "{{ nginx_vhosts }}"
+#   notify: reload nginx
+
+- name: remove old default conf file
+  file:
+    path: /etc/nginx/sites-available/default
+    state: absent
+  become: true
+
+- name: copy default host template
+  template:
+    src: default.j2
+    dest: /etc/nginx/sites-available/default
+    force: yes
+    mode: 0644
+  notify: reload nginx
+  become: true
+
+# - name: Remove managed vhost config files.
+#   file:
+#     path: "{{ nginx_vhost_path }}/{{ item.filename|default(item.server_name.split(' ')[0] ~ '.conf') }}"
+#     state: absent
+#   when: item.state|default('present') == 'absent'
+#   with_items: "{{ nginx_vhosts }}"
+#   notify: reload nginx
+
+# - name: Remove legacy vhosts.conf file.
+#   file:
+#     path: "{{ nginx_vhost_path }}/vhosts.conf"
+#     state: absent
+#   notify: reload nginx
+
+- name: Ensure nginx is started and enabled to start at boot.
+  service: 
+    name: nginx
+    state: started
+    enabled: yes
+
+#- name: TEMP! copy test index in html folder
+#  block:
+#    - file:
+#        path: "/vagrant"
+#        state: directory
+#        owner: "{{ user.name }}"
+#        group: "{{ user.name }}"
+#        mode: 0755
+#
+#    - copy:
+#        src: "{{ role_path }}/files/index.php"
+#        dest: /vagrant/index.php
+
+# - name: restart nginx
+#   service: 
+#     name: nginx
+#     state: restarted
+# - name: debug
+#   debug:
+#     msg: "{{ nginx_ppa_use }}"

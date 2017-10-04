@@ -1,0 +1,34 @@
+---
+- hosts: all
+  gather_facts: True
+  vars_files:
+    - "vars/settings.vars.yml"
+
+
+#  tasks:
+#    - debug:
+#        msg: "{{ ansible_env }}"
+
+  roles:
+    - role: setlocale
+#      when: ansible_env.LANG != "en_US.UTF-8"
+      tags:
+        - setlocale
+
+    - role: common
+      tags:
+        - common
+
+    - role: nginx
+      tags:
+        - nginx
+        # - php
+
+    - role: php
+      tags:
+        - php
+
+    - role: mysql
+      tags:
+        - mysql
+        # - php
