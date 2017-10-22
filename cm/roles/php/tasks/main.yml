@@ -11,49 +11,53 @@
     state: latest
   with_items:
     - php7.1-fpm
+    - php7.1-cgi
     - php7.1-cli
     - php7.1-intl
     - php7.1-zip
     - php7.1-mysql
+    - php7.1-mbstring
+    - php7.1-xml
   become: true
 
 - name: check composer install
   stat: "path=/usr/local/bin/composer"
   register: composer_bin
 
-#- name: install composer
-#  block:
-#    - name: download composer installer
-#      get_url:
-#        url: https://getcomposer.org/installer
-#        dest: /tmp/composer-installer.php
-#        mode: 0755
-#    - name: run composer installer
-#      shell: |
-#        php /tmp/composer-installer.php --install-dir /tmp
-#        cd /tmp
-#    - name: copy composer executable to bin folder
-#      copy:
-#        src: /tmp/composer.phar
-#        dest: /usr/local/bin/composer
-#        remote_src: true
-#        mode: 0755
-#    - name: install composer addons
-#      shell: "composer global require {{ item }}"
-#      with_items:
-#        - "squizlabs/php_codesniffer=*"
-#        - "mkusher/padawan=*"
-#      ignore_errors: yes
-#      become: true
-#      become_user: "{{ user.name }}"
-#    - name: delete temp files
-#      file:
-#        path: "/tmp/{{ item }}"
-#        state: absent
-#      with_items:
-#        - composer-installer.php
-#        - composer.phar
-#  when: not composer_bin.stat.exists
+- name: install composer
+  block:
+    - name: download composer installer
+      get_url:
+        url: https://getcomposer.org/installer
+        dest: /tmp/composer-installer.php
+        mode: 0755
+    - name: run composer installer
+      shell: |
+        php /tmp/composer-installer.php --install-dir /tmp
+        cd /tmp
+    - name: copy composer executable to bin folder
+      copy:
+        src: /tmp/composer.phar
+        dest: /usr/local/bin/composer
+        remote_src: true
+        mode: 0755
+    - name: install composer addons
+      shell: "composer global require {{ item }}"
+      with_items:
+        - "squizlabs/php_codesniffer=*"
+        - "mkusher/padawan=*"
+      ignore_errors: yes
+      become: true
+      become_user: "{{ user.name }}"
+    - name: delete temp files
+      file:
+        path: "/tmp/{{ item }}"
+        state: absent
+      with_items:
+        - composer-installer.php
+        - composer.phar
+  when: not composer_bin.stat.exists
+  become: true
 
 - name: install adminer
   get_url:
